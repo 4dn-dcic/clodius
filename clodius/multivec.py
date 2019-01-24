@@ -103,7 +103,8 @@ def bedfile_to_multivec(input_filename, f_out,
                     print("curr_index:", curr_index, data_start_index)
                     print("line:", line)
                 '''
-
+                print(curr_index)
+                print(data_start_index)
                 assert(curr_index == data_start_index)
                 #print('vector', vector)
                 batch += [vector]
