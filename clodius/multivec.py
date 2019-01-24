@@ -63,9 +63,9 @@ def bedfile_to_multivec(input_filename, f_out,
                         new_line[x] = str(new_line[x])
                         x = x + 1
 
-                        formatted_line = '\t'.join(new_line)
-                        additional_lines.append(formatted_line)
-                        new_start = new_end
+                    formatted_line = '\t'.join(new_line)
+                    additional_lines.append(formatted_line)
+                    new_start = new_end
 
                 return additional_lines
 
