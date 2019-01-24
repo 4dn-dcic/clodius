@@ -74,58 +74,58 @@ def bedfile_to_multivec(input_filename, f_out,
             for l in additional_lines:
                 chrom,start,end,vector = bedline_to_chrom_start_end_vector(line)
 
-                        if prev_chrom is not None and chrom != prev_chrom:
-                            # we've reached a new chromosome so we'll dump all
-                            # the previous values
-                            print("len(batch:", len(batch))
-                            f_out[prev_chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
+                if prev_chrom is not None and chrom != prev_chrom:
+                    # we've reached a new chromosome so we'll dump all
+                    # the previous values
+                    print("len(batch:", len(batch))
+                    f_out[prev_chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
 
-                            # we're starting a new chromosome so we start from the beginning
-                            curr_index = 0
-                            batch_start_index = 0
-                            batch = []
+                    # we're starting a new chromosome so we start from the beginning
+                    curr_index = 0
+                    batch_start_index = 0
+                    batch = []
 
-                        prev_chrom = chrom
+                prev_chrom = chrom
 
-                        #print('parts', parts)
-                        #print('chrom:', chrom, start)
+                #print('parts', parts)
+                #print('chrom:', chrom, start)
 
-                        data_start_index = start // base_resolution
+                data_start_index = start // base_resolution
 
-                        # if the bedfile skips over a region, we have to add it as empty values
-                        # to preserve our batch writing
-                        while curr_index < data_start_index:
-                            batch += [[FILL_VALUE] * len(vector)]
-                            curr_index += 1
+                # if the bedfile skips over a region, we have to add it as empty values
+                # to preserve our batch writing
+                while curr_index < data_start_index:
+                    batch += [[FILL_VALUE] * len(vector)]
+                    curr_index += 1
 
-                        '''
-                        if curr_index != data_start_index:
-                            print("curr_index:", curr_index, data_start_index)
-                            print("line:", line)
-                        '''
+                '''
+                if curr_index != data_start_index:
+                    print("curr_index:", curr_index, data_start_index)
+                    print("line:", line)
+                '''
 
-                        assert(curr_index == data_start_index)
-                        #print('vector', vector)
-                        batch += [vector]
-                        curr_index += 1
+                assert(curr_index == data_start_index)
+                #print('vector', vector)
+                batch += [vector]
+                curr_index += 1
 
-                        # fill in empty
+                # fill in empty
 
-                        if len(batch) >= batch_length:
-                            # dump batch
-                            try:
-                                f_out[chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
-                            except TypeError as ex:
-                                print("Error:", ex, file=sys.stderr)
-                                print("Probably need to set the --num-rows parameter", file=sys.stderr)
-                                return
+                if len(batch) >= batch_length:
+                    # dump batch
+                    try:
+                        f_out[chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
+                    except TypeError as ex:
+                        print("Error:", ex, file=sys.stderr)
+                        print("Probably need to set the --num-rows parameter", file=sys.stderr)
+                        return
 
-                            batch = []
-                            batch_start_index = curr_index
-                            print("dumping batch:", chrom, batch_start_index)
+                    batch = []
+                    batch_start_index = curr_index
+                    print("dumping batch:", chrom, batch_start_index)
 
-                    #print('chrom', chrom)
-                    f_out[chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
+                #print('chrom', chrom)
+                f_out[chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
 
 
         if prev_chrom is not None and chrom != prev_chrom:
@@ -222,7 +222,7 @@ def create_multivec_multires(array_data, chromsizes,
     f.create_group('resolutions')
     f.create_group('chroms')
 
-
+    print("array_data:", array_data['segment1'][-20:])
     # start with a resolution of 1 element per pixel
     curr_resolution = starting_resolution
 
