@@ -67,7 +67,7 @@ def bedfile_to_multivec(input_filename, f_out,
                         additional_lines.append(formatted_line)
                         new_start = new_end
 
-                        return additional_lines
+                return additional_lines
 
             additional_lines = get_additional_lines(chrom, start, end, vector)
 
