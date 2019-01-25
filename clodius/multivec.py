@@ -77,7 +77,6 @@ def bedfile_to_multivec(input_filename, f_out,
         return formatted_list
 
     new_file = format_file(f)
-    print(new_file)
 
     for line in new_file:
         print(line)
