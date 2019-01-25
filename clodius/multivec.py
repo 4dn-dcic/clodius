@@ -80,7 +80,12 @@ def bedfile_to_multivec(input_filename, f_out,
     print(new_file)
 
     for line in new_file:
+        print(line)
         chrom,start,end,vector = bedline_to_chrom_start_end_vector(line)
+        print(chrom)
+        print(start)
+        print(end)
+        print(vector)
 
         # if end - start != base_resolution and not warned:
         #     print("WARNIN: interval length ({}) doesn't match base resolution ({}): {}".
