@@ -8,7 +8,7 @@ import os
 import os.path as op
 import sys
 
-def bedfile_to_multivec(input_filename, f_out, 
+def bedfile_to_multivec(input_filename, f_out,
         bedline_to_chrom_start_end_vector, base_resolution,
         has_header, chunk_size):
     '''
@@ -18,7 +18,7 @@ def bedfile_to_multivec(input_filename, f_out,
         f = gzip.open(input_filename, 'r')
     else:
         f = open(input_filename, 'r')
-        
+
     FILL_VALUE = np.nan
 
     # batch regions because h5py is really bad at writing
@@ -29,28 +29,69 @@ def bedfile_to_multivec(input_filename, f_out,
     curr_index = 0
     # the start of the batch in the dataset
     batch_start_index = 0
-    
+
     if has_header:
         f.readline()
 
     prev_chrom = None
     print('base_resolution:', base_resolution)
-    warned = False
+    #warned = False
 
-    for line in f:
+    def format_file(bedfile):
+        formatted_list = []
+        for bedline in bedfile:
+            line = bedline.strip().split()
+
+            if (int(line[2]) - int(line[1])) != base_resolution:
+
+                temp_list = []
+
+                start = int(line[1])
+                end = int(line[2])
+                chrom = line[0]
+                values = []
+
+                line_length = len(line)
+                x = 3
+                for i in range(3, line_length):
+                    values.append(line[x])
+                    x = x + 1
+
+                    chunks = int((end - start)/base_resolution)
+                    new_start = start
+
+                    for i in range(1, chunks + 1):
+                        new_line = []
+                        val = new_start + base_resolution
+                        new_end = val
+                        new_line.append(chrom)
+                        new_line.append(str(new_start))
+                        new_line.append(str(new_end))
+                        new_line_2 = new_line + values
+                        new_start = new_end
+
+                        formatted_line = '\t'.join(new_line_2)
+                        formatted_list.append(formatted_line)
+                    else:
+                        formatted_list.append(bedline)
+        return formatted_list
+
+    new_file = format_file(f)
+    
+    for line in new_file:
         chrom,start,end,vector = bedline_to_chrom_start_end_vector(line)
 
-        if end - start != base_resolution and not warned:
-            print("WARNING: interval length ({}) doesn't match base resolution ({}): {}".
-                    format(end - start, base_resolution, line))
-            warned = True
+        # if end - start != base_resolution and not warned:
+        #     print("WARNIN: interval length ({}) doesn't match base resolution ({}): {}".
+        #             format(end - start, base_resolution, line))
+        #     warned = True
 
         if prev_chrom is not None and chrom != prev_chrom:
             # we've reached a new chromosome so we'll dump all
             # the previous values
             print("len(batch:", len(batch))
             f_out[prev_chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
-            
+
             # we're starting a new chromosome so we start from the beginning
             curr_index = 0
             batch_start_index = 0
@@ -98,14 +139,14 @@ def bedfile_to_multivec(input_filename, f_out,
     #print('chrom', chrom)
     f_out[chrom][batch_start_index:batch_start_index+len(batch)] = np.array(batch)
 
-def create_multivec_multires(array_data, chromsizes, 
+def create_multivec_multires(array_data, chromsizes,
                     agg, starting_resolution=1,
                     tile_size=1024, output_file='/tmp/my_file.multires',
                     row_infos=None):
     '''
     Create a multires file containing the array data
     aggregated at multiple resolutions.
-    
+
     Parameters
     ----------
     array_data: {'chrom_key': np.array, }
@@ -131,11 +172,11 @@ def create_multivec_multires(array_data, chromsizes,
 
     # this will be the file that contains our multires data
     f = h5py.File(filename, 'w')
-        
+
     # store some metadata
     f.create_group('info')
     f['info'].attrs['tile-size'] = tile_size
-    
+
     f.create_group('resolutions')
     f.create_group('chroms')
 
@@ -185,7 +226,7 @@ def create_multivec_multires(array_data, chromsizes,
         while start < len(chrom_data):
             chrom_data[start:start + chunk_size] = array_data[chrom][start:start+chunk_size]    # see above section
             start += int(min(standard_chunk_size, len(array_data[chrom]) - start))
-        
+
 
     # the maximum zoom level corresponds to the number of aggregations
     # that need to be performed so that the entire extent of
@@ -193,7 +234,7 @@ def create_multivec_multires(array_data, chromsizes,
     total_length = sum(lengths)
     # print("total_length:", total_length, "tile_size:", tile_size, "starting_resolution:", starting_resolution)
     max_zoom = math.ceil(math.log(total_length / (tile_size * starting_resolution) ) / math.log(2))
-    
+
     # we're going to go through and create the data for the different
     # zoom levels by summing adjacent data points
     prev_resolution = curr_resolution
@@ -231,7 +272,7 @@ def create_multivec_multires(array_data, chromsizes,
             new_shape[0] = math.ceil(new_shape[0] / 2)
             new_shape = tuple(new_shape)
 
-            f['resolutions'][str(curr_resolution)]['values'].create_dataset(chrom, 
+            f['resolutions'][str(curr_resolution)]['values'].create_dataset(chrom,
                                             new_shape, compression='gzip')
 
             while start < len(chrom_data):
@@ -240,7 +281,7 @@ def create_multivec_multires(array_data, chromsizes,
                 #print("prev_resolution:", prev_resolution)
                 #print("old_data.shape", old_data.shape)
 
-                # this is a sort of roundabout way of calculating the 
+                # this is a sort of roundabout way of calculating the
                 # shape of the aggregated array, but all its doing is
                 # just halving the first dimension of the previous shape
                 # without taking into account the other dimensions
@@ -259,8 +300,8 @@ def create_multivec_multires(array_data, chromsizes,
                 new_data = agg(old_data)
 
                 '''
-                print("zoom_level:", max_zoom - 1 - i, 
-                      "resolution:", curr_resolution, 
+                print("zoom_level:", max_zoom - 1 - i,
+                      "resolution:", curr_resolution,
                       "new_data length", len(new_data))
                 '''
                 f['resolutions'][str(curr_resolution)]['values'][chrom][int(start/2):int(start/2+chunk_size/2)] = new_data
