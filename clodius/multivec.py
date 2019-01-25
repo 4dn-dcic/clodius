@@ -77,7 +77,8 @@ def bedfile_to_multivec(input_filename, f_out,
         return formatted_list
 
     new_file = format_file(f)
-    
+    print(new_file)
+
     for line in new_file:
         chrom,start,end,vector = bedline_to_chrom_start_end_vector(line)
 
